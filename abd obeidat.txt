@@ -1,0 +1,267 @@
+using System;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Versioning;
+using System.Security.Cryptography;
+
+namespace ATM_Assignment
+{
+
+    public class Person
+    {
+        public string FirstName;
+        public string LastName;
+        public Person (string s1 , string s2)
+        {
+            FirstName = s1;
+            LastName = s2;
+        }
+        public Person() 
+        {
+            FirstName = "Abd";
+            LastName  = "Obeidat";
+        }
+    }
+    public class BankAccount
+    {
+        private Person User;
+        private string pinCode;
+        private string cardNumber;
+        private string E_mail;
+        private int accountBalance;
+        public BankAccount()
+        {
+
+        }
+        public BankAccount(Person User, string E_mail , string cardNumber, string pinCode, int accountBalance)
+        {
+            this.User1 = User;
+            this.E_mail1 = E_mail;
+            this.CardNumber = cardNumber;
+            this.PinCode = pinCode;
+            this.AccountBalance = accountBalance;
+        }
+
+        public string PinCode { get => pinCode; set => pinCode = value; }
+        public string CardNumber { get => cardNumber; set => cardNumber = value; }
+        public string E_mail1 { get => E_mail; set => E_mail = value; }
+        public int AccountBalance { get => accountBalance; set => accountBalance = value; }
+        internal Person User1 { get => User; set => User = value; }
+
+    }
+    public class Bank
+    {
+        public int bankCapacity;
+        public BankAccount[] User;
+        public int NumofCustomer = 0;
+        public Bank(int capacity ) { bankCapacity = capacity; }
+        public BankAccount GetBankAccount(string cardNumber, string pinCode)
+        {
+            BankAccount f = new BankAccount();
+            for (int i = 0; i < NumofCustomer; i++)
+            {
+                if (User[i].CardNumber == cardNumber && User[i].PinCode == pinCode)
+                    f = User[i];
+            }
+            return f;
+        }
+        public void AddNewAccount(BankAccount User)
+        {
+            if (NumofCustomer < bankCapacity)
+                this.User[NumofCustomer++] = User;
+            else
+            {
+                Console.WriteLine("/n                    sorry bank is Full/n");
+            }
+        }
+        public bool Is User(string cardNumber, string pinCode)
+        {
+            bool b = false;
+            for (int i = 0; i < NumofCustomer; i++)
+            {
+                if (User[i].CardNumber == cardNumber && User[i].PinCode == pinCode)
+                    b = true;
+            }
+            return b;
+        }
+        public int CheckBalance(string s1, string s2)
+        {
+            for (int i = 0; i < NumofCustomer; i++)
+            {
+                if (s2 == User[i].PinCode && s1 == User[i].CardNumber)
+                    return User[i].AccountBalance;
+            }
+            return 0;
+        }
+
+        public void Load()
+        {
+            FileStream fs0 = new FileStream("Users.txt", FileMode.Open, FileAccess.Read);
+            BinaryFormatter bf = new BinaryFormatter();
+            int count = 0;
+            while (fs0.Position < fs0.Length)
+            {
+                User[count++] = (BankAccount)bf.Deserialize(fs0);
+            }
+            fs0.Close();
+            NumofCustomer = count;
+        }
+        public void Save()
+        {
+            FileStream fs0 = new FileStream("Users.txt", FileMode.Create, FileAccess.Write);
+            BinaryFormatter bf = new BinaryFormatter();
+            for (int i = 0; i < NumofCustomer; i++)
+            {
+                bf.Serialize(fs0, User[i]);
+            }
+            fs0.Close();
+        }
+        public void Withdraw(BankAccount U , int Amount)
+        {
+            for ( int i = 0; i < NumofCustomer; i++ ) 
+            {
+                if (object.Equals(U,User[i]))
+                {
+                    User[i].AccountBalance -= Amount;
+                }
+
+            }
+        }
+        public void Deposit(BankAccount U, int Amount)
+        {
+            for (int i = 0; i < NumofCustomer; i++)
+            {
+                if (object.Equals(U, User[i]))
+                {
+                    User[i].AccountBalance += Amount;
+                }
+
+            }
+        }
+    }
+    public class Program
+    {
+        static void Main()
+        {
+            int x = 1;
+            Console.WriteLine(" enter bank capacity /n");
+            int capacity = Convert.ToInt32(Console.ReadLine());
+            Bank RTX = new Bank(capacity);
+            RTX.Load();
+            while (x!=0)
+            {
+                int ans;
+                Console.WriteLine("please enter a number from 1-3\n)Login/n2)create new account/n3)exite/n");
+                ans = Convert.ToInt32(Console.ReadLine());
+                if (ans == 1 )
+                {
+                    string s1, s2;
+                    int rx = 1;
+                    Console.WriteLine("\nplease enter card number\n");
+                    s1 = Console.ReadLine();
+                    Console.WriteLine("\nplease enter pincode\n");
+                    s2 = Console.ReadLine();
+                    while(rx!=0)
+                    {
+                        if (s2.Length != 4 || s1.Length !=9)
+                        {
+                            if (s2.Length != 4)
+                            {
+                                Console.WriteLine("\nInvalid Pincode (pincode should be 4 charecters )\nplease re-enter a valid pincode\n");
+                                s2 = Console.ReadLine();
+                            }
+                            if (s1.Length != 9)
+                            {
+                                Console.WriteLine("\nInvalid card number (cardnumber should be 9 charecters )\nplease re-enter a valid cardnumber\n");
+                                s1 = Console.ReadLine();
+                            }
+                        }
+                        else
+                            rx = 0;
+                    }
+                    if (RTX.IsUser(s1,s2))
+                    {
+                        BankAccount B = RTX.GetBankAccount(s1,s2);
+                        bool t = true;
+                        while (t)
+                        {
+                            Console.WriteLine("\n*****************************************\nplease enter a number from 1-3\n1)withdraw\n2)Deposit\n3)check balance\n4)exite\n***************************\n");
+                            int g = Convert.ToInt32(Console.ReadLine());
+                            if (g == 1)
+                            {
+                                Console.WriteLine("\nplease enter an integer number to withdraw from your balance\n");
+                                int A = Convert.ToInt32(Console.ReadLine());
+                                RTX.Withdraw(B,A);
+                            }
+                            else if (g == 2)
+                            {
+                                Console.WriteLine("\nplease enter an integer number to Deposit from your balance\n");
+                                int A = Convert.ToInt32(Console.ReadLine());
+                                RTX.Deposit(B, A);
+                            }
+                            else if (g == 3)
+                            {
+                                Console.WriteLine("\nYou Account balance = " + RTX.CheckBalance(s1, s2));
+                            }
+                            else if (g == 4)
+                            {
+                                Console.WriteLine("\n                    Goodbye/n");
+                                t = false;
+                            }
+                            else
+                                Console.WriteLine("\nInvalid input \nplease re-enter a valid Input(1-4)\n");
+                        }
+
+                    }
+
+                }
+                else if (ans == 2)
+                {
+                    int rx = 1;
+                    Console.WriteLine("\nplease enter your frist name");
+                    string fname = Console.ReadLine();
+                    Console.WriteLine("please enter your last name");
+                    string lname = Console.ReadLine();
+                    Person p = new Person(fname,lname);
+                    Console.WriteLine("please enter pincode");
+                    string pin = Console.ReadLine();
+                    Console.WriteLine("please enter cardnumber");
+                    string card = Console.ReadLine();
+                    while (rx != 0)
+                    {
+                        if (pin.Length != 4 || card.Length != 9)
+                        {
+                            if (pin.Length != 4)
+                            {
+                                Console.WriteLine("\nInvalid Pincode (pincode should be 4 charecters )\nplease re-enter a valid pincode\n");
+                                pin = Console.ReadLine();
+                            }
+                            if (card.Length != 9)
+                            {
+                                Console.WriteLine("\nInvalid card number (cardnumber should be 9 charecters )\nplease re-enter a valid cardnumber\n");
+                                card = Console.ReadLine();
+                            }
+                        }
+                        else
+                            rx = 0;
+                    }
+                    Console.WriteLine("please enter email address");
+                    string mail = Console.ReadLine();
+                    Console.WriteLine("please enter account balance");
+                    int balance = Convert.ToInt32(Console.ReadLine());
+                    BankAccount tmpAccount = new BankAccount(p, mail, card, pin, balance);
+                    RTX.AddNewAccount(tmpAccount);
+
+                }
+                else if (ans == 3)
+                {
+                    Console.WriteLine("\n                    System shutting dawn\n");
+                    x = 0;
+                    RTX.Save();
+                }
+                else
+                    Console.WriteLine("\n                    Wrong input\n");
+            }
+        }
+    }
+}
